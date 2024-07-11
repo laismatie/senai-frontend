@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 import { Modal, Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Grid } from '@mui/material';
 import Image from 'next/image';
 import InputMask from 'react-input-mask';
@@ -11,9 +11,48 @@ interface ModalFormProps {
 const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
   const [selectedValue, setSelectedValue] = useState('');
   const [selectedAreaValue, setSelectedAreaValue] = useState('');
+  const [document, setDocument] = useState<string>('');
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
 
-  const handleSelectChange = (event) => setSelectedValue(event.target.value);
-  const handleSelectAreaChange = (event) => setSelectedAreaValue(event.target.value);
+  const handleSelectChange = (event: { target: { value: React.SetStateAction<string>; }; }) => setSelectedValue(event.target.value);
+  const handleSelectAreaChange = (event: { target: { value: React.SetStateAction<string>; }; }) => setSelectedAreaValue(event.target.value);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = {
+      document,
+      name,
+      email,
+      phone,
+      area: selectedValue,
+      organization: selectedAreaValue,
+    };
+
+    try {
+      const response = await fetch(
+      'http://localhost:8080/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        // Handle success
+        alert('Inscrição realizada com sucesso!');
+        handleClose();
+      } else {
+        // Handle error
+        alert('Erro ao realizar inscrição. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Erro ao realizar inscrição. Tente novamente.');
+    }
+  }
 
   return (
     <Modal
@@ -49,8 +88,8 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
           Formulário de Inscrição de Voluntário na Campanha MS Pela Vida
         </Typography>
 
-        <Box component="form" sx={{ mt: 2, width: '100%' }}>
-          <InputMask mask="999.999.999-99">
+        <Box onSubmit={handleSubmit} component="form" sx={{ mt: 2, width: '100%' }}>
+          <InputMask mask="999.999.999-99" value={document} onChange={(e) => setDocument(e.target.value)}>
             {() => (
               <TextField
                 margin="normal"
@@ -73,6 +112,8 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
             name="name"
             autoComplete="name"
             autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
           <TextField
             margin="normal"
@@ -82,8 +123,10 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
             label="Email"
             name="email"
             autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
-          <InputMask mask="(99) 99999-9999">
+          <InputMask mask="(99) 99999-9999" value={phone} onChange={(e) => setPhone(e.target.value)}>
             {() => (
               <TextField
                 margin="normal"
@@ -108,12 +151,12 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
                 onChange={handleSelectChange}
               >
                 <MenuItem value={"teacher"}>Professor</MenuItem>
-                <MenuItem value={"technical"}>Técnico</MenuItem>
+                <MenuItem value={"technician"}>Técnico</MenuItem>
                 <MenuItem value={"engineer"}>Engenheiro</MenuItem>
               </Select>
             </FormControl>
             <FormControl>
-              <InputLabel id="demo-simple-select-label">Área</InputLabel>
+              <InputLabel id="demo-simple-select-label">Casa</InputLabel>
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
