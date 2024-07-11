@@ -1,7 +1,8 @@
 import React, { FormEvent, useState } from 'react';
-import { Modal, Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Grid } from '@mui/material';
+import { Modal, Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Grid, FormHelperText } from '@mui/material';
 import Image from 'next/image';
 import InputMask from 'react-input-mask';
+import userSchema from '../schemas/userSchema';
 
 interface ModalFormProps {
   open: boolean;
@@ -15,43 +16,59 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
+  const [errors, setErrors] = useState<any>({});
 
   const handleSelectChange = (event: { target: { value: React.SetStateAction<string>; }; }) => setSelectedValue(event.target.value);
   const handleSelectAreaChange = (event: { target: { value: React.SetStateAction<string>; }; }) => setSelectedAreaValue(event.target.value);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = {
-      document,
-      name,
-      email,
-      phone,
-      area: selectedValue,
-      organization: selectedAreaValue,
-    };
-
+    
     try {
-      const response = await fetch(
-      'http://localhost:8080/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      await userSchema.validate({
+        document,
+        name,
+        email,
+        phone,
+        area: selectedValue,
+        organization: selectedAreaValue,
+      }, { abortEarly: false }); // abortEarly: false to validation executing before return
+      
+      const data = {
+        document,
+        name,
+        email,
+        phone,
+        area: selectedValue,
+        organization: selectedAreaValue,
+      };
 
-      if (response.ok) {
-        // Handle success
-        alert('Inscrição realizada com sucesso!');
-        handleClose();
-      } else {
-        // Handle error
-        alert('Erro ao realizar inscrição. Tente novamente.');
+      const response = await fetch(
+        'http://localhost:8080/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (response.ok) {
+          alert('Inscrição realizada com sucesso!');
+          handleClose();
+        } else {
+          alert('Erro ao realizar inscrição. Tente novamente.');
+        }
+      } catch (error: any) {
+        if (error.name === 'ValidationError') {
+          const yupErrors: any = {};
+          error.inner.forEach((e: any) => {
+            yupErrors[e.path] = e.message;
+          });
+          setErrors(yupErrors);
+        } else {
+          alert('Erro ao realizar inscrição. Tente novamente.');
+        }
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Erro ao realizar inscrição. Tente novamente.');
-    }
   }
 
   return (
@@ -93,19 +110,19 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
             {() => (
               <TextField
                 margin="normal"
-                required
                 fullWidth
                 name="document"
                 label="CPF"
                 type="text"
                 id="document"
                 autoComplete="document"
+                error={!!errors.document}
+                helperText={errors.document}
               />
             )}
           </InputMask>
           <TextField
             margin="normal"
-            required
             fullWidth
             id="name"
             label="Nome completo"
@@ -114,10 +131,11 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
+            error={!!errors.name}
+            helperText={errors.name}
           />
           <TextField
             margin="normal"
-            required
             fullWidth
             id="email"
             label="Email"
@@ -125,18 +143,21 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={!!errors.email}
+            helperText={errors.email}
           />
           <InputMask mask="(99) 99999-9999" value={phone} onChange={(e) => setPhone(e.target.value)}>
             {() => (
               <TextField
                 margin="normal"
-                required
                 fullWidth
                 name="phone"
                 label="Celular"
                 type="phone"
                 id="phone"
                 autoComplete="phone"
+                error={!!errors.phone}
+                helperText={errors.phone}
               />
             )}
           </InputMask>
@@ -149,18 +170,22 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
                 id="demo-simple-select"
                 value={selectedValue}
                 onChange={handleSelectChange}
+                error={!!errors.area}
               >
                 <MenuItem value={"teacher"}>Professor</MenuItem>
                 <MenuItem value={"technician"}>Técnico</MenuItem>
                 <MenuItem value={"engineer"}>Engenheiro</MenuItem>
               </Select>
+              {errors.area && <FormHelperText error>{errors.area}</FormHelperText>}
             </FormControl>
+
             <FormControl>
               <InputLabel id="demo-simple-select-label">Casa</InputLabel>
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
                 value={selectedAreaValue}
+                error={!!errors.organization}
                 onChange={handleSelectAreaChange}
               >
                 <MenuItem value={"FIEMS"}>FIEMS</MenuItem>
@@ -168,6 +193,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
                 <MenuItem value={"IEL"}>IEL</MenuItem>
                 <MenuItem value={"SENAI"}>SENAI</MenuItem>
               </Select>
+              {errors.organization && <FormHelperText error>{errors.organization}</FormHelperText>}
             </FormControl>
           </Grid>
           <Button
