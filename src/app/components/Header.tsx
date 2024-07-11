@@ -3,14 +3,20 @@
 import Image from "next/image";
 import styles from './Header.module.css';
 import React, { useState } from "react";
-import ModalForm from "./ModalForm";
+import SubscriptionModal from "./SubscriptionModal";
+import { SubscriptionForm } from "./SubscriptionForm";
+import { LoginForm } from "./LoginForm";
 
 export function Header() {
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const [openSubscriptionModal, setOpenSubscriptionModal] = useState(false);
+  const handleOpenSubscriptionModal = () => setOpenSubscriptionModal(true);
+  const handleCloseSubscriptionModal = () => setOpenSubscriptionModal(false);
+  
+  const [openLoginModal, setOpenLoginModal] = useState(false);
+  const handleOpenLoginModal = () => setOpenLoginModal(true);
+  const handleCloseLoginModal = () => setOpenLoginModal(false);
 
-    return (
+  return (
     <>
       <div className={styles.container}>
         <Image
@@ -31,11 +37,17 @@ export function Header() {
 
       <div className={styles.actions}>
         <button className={styles.buttonAction}>Sobre o projeto</button>
-        <button  onClick={handleOpen} className={styles.buttonAction}>Inscrições</button>
-        <button className={styles.buttonAction}>Painel Admin</button>
+        <button onClick={handleOpenSubscriptionModal} className={styles.buttonAction}>Inscrições</button>
+        <button onClick={handleOpenLoginModal} className={styles.buttonAction}>Painel Admin</button>
       </div>
 
-      <ModalForm open={open} handleClose={handleClose} />
+      <SubscriptionModal open={openSubscriptionModal} handleClose={handleCloseSubscriptionModal}>
+        <SubscriptionForm/>
+      </SubscriptionModal>
+
+      <SubscriptionModal open={openLoginModal} handleClose={handleCloseLoginModal}>
+        <LoginForm/>
+      </SubscriptionModal>
     </>
   );
 }

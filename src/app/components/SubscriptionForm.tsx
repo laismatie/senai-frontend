@@ -1,15 +1,9 @@
-import React, { FormEvent, useState } from 'react';
-import { Modal, Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField, Button, Grid, FormHelperText } from '@mui/material';
-import Image from 'next/image';
+import React, { FormEvent, useState } from "react";
+import userSchema from "../schemas/userSchema";
 import InputMask from 'react-input-mask';
-import userSchema from '../schemas/userSchema';
+import { Box, Button, FormControl, FormHelperText, InputLabel, MenuItem, Select, TextField, Typography, Grid } from "@mui/material";
 
-interface ModalFormProps {
-  open: boolean;
-  handleClose: () => void;
-}
-
-const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
+export function SubscriptionForm() {
   const [selectedValue, setSelectedValue] = useState('');
   const [selectedAreaValue, setSelectedAreaValue] = useState('');
   const [document, setDocument] = useState<string>('');
@@ -54,7 +48,13 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
 
         if (response.ok) {
           alert('Inscrição realizada com sucesso!');
-          handleClose();
+          setDocument('');
+          setName('');
+          setEmail('');
+          setPhone('');
+          setSelectedValue('');
+          setSelectedAreaValue('');
+          setErrors({});
         } else {
           alert('Erro ao realizar inscrição. Tente novamente.');
         }
@@ -70,38 +70,9 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
         }
       }
   }
-
-  return (
-    <Modal
-      open={open}
-      onClose={handleClose}
-      aria-labelledby="modal-modal-title"
-    >
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          borderRadius: 6,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          height: 'fit-content',
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 4,
-        }}
-      >
-        <Image
-          src="/images/logo.png"
-          alt="SENAI Logo"
-          width={110}
-          height={76}
-        />
-
-        <Typography sx={{ textAlign: 'center', mt: 2 }} id="modal-modal-title" variant="h6" component="h2">
+    return (
+    <>
+     <Typography sx={{ textAlign: 'center', mt: 2 }} id="modal-modal-title" variant="h6" component="h2">
           Formulário de Inscrição de Voluntário na Campanha MS Pela Vida
         </Typography>
 
@@ -206,9 +177,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ open, handleClose }) => {
             Realizar inscrição
           </Button>
         </Box>
-      </Box>
-    </Modal>
+    </>
   );
-};
-
-export default ModalForm;
+}
