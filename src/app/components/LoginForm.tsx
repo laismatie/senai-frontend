@@ -1,57 +1,49 @@
 import React, { FormEvent, useState } from "react";
-import userSchema from "../schemas/userSchema";
 import InputMask from 'react-input-mask';
-import { Box, Button, FormControl, FormHelperText, InputLabel, MenuItem, Select, TextField, Typography, Grid } from "@mui/material";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import loginSchema from "../schemas/loginSchema";
 
 export function LoginForm() {
   const [document, setDocument] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [errors, setErrors] = useState<any>({});
 
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
     try {
-      await userSchema.validate({
-        document,
-        password,
-      }, { abortEarly: false }); // abortEarly: false to validation executing before return
-      
-      const data = {
-        document,
-        password,
-      };
+      await loginSchema.validate({ document, password }, { abortEarly: false });
 
-      const response = await fetch(
-        'http://localhost:8080/sign_in', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
+      const data = { document, password };
 
-        if (response.ok) {
-          alert('Login realizado com sucesso!');
-          setDocument('');
-          setPassword('');
-          setErrors({});
-        } else {
-          alert('Erro ao realizar login.');
-        }
-      } catch (error: any) {
-        if (error.name === 'ValidationError') {
-          const yupErrors: any = {};
-          error.inner.forEach((e: any) => {
-            yupErrors[e.path] = e.message;
-          });
-          setErrors(yupErrors);
-        } else {
-          alert('Erro ao realizar login.');
-        }
+      const response = await fetch('http://localhost:8080/sign_in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert('Login realizado com sucesso!');
+        setDocument('');
+        setPassword('');
+        setErrors({});
+      } else {
+        const errorResponse = await response.json();
+        alert(`Erro ao realizar login: ${errorResponse.message || response.statusText}`);
       }
-  }
+    } catch (error: any) {
+      if (error.name === 'ValidationError') {
+        const yupErrors: any = {};
+        error.inner.forEach((e: any) => {
+          yupErrors[e.path] = e.message;
+        });
+        setErrors(yupErrors);
+      } else {
+        alert('Erro ao realizar login.');
+      }
+    }
+  };
+
     return (
     <>
       <Typography sx={{ textAlign: 'center', mt: 2 }} id="modal-modal-title" variant="h6" component="h2">
@@ -82,7 +74,7 @@ export function LoginForm() {
             label="Senha"
             name="password"
             autoFocus
-            value={name}
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={!!errors.password}
             helperText={errors.password}
