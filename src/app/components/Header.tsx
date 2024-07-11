@@ -1,8 +1,16 @@
+'use client';
+
 import Image from "next/image";
 import styles from './Header.module.css';
+import React, { useState } from "react";
+import ModalForm from "./ModalForm";
 
 export function Header() {
-  return (
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+    return (
     <>
       <div className={styles.container}>
         <Image
@@ -23,9 +31,11 @@ export function Header() {
 
       <div className={styles.actions}>
         <button className={styles.buttonAction}>Sobre o projeto</button>
-        <button className={styles.buttonAction}>Inscrições</button>
+        <button  onClick={handleOpen} className={styles.buttonAction}>Inscrições</button>
         <button className={styles.buttonAction}>Painel Admin</button>
       </div>
+
+      <ModalForm open={open} handleClose={handleClose} />
     </>
   );
 }
